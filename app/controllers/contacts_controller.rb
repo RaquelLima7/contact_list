@@ -3,16 +3,20 @@ class ContactsController < ApplicationController
 
   # GET /contacts
   def index
-    @contacts = Contact.all
+    # @contacts = Contact.all
+    # authorize_contact
+    @contacts = policy_scope(Contact).where(user_id: current_user.id)
   end
 
   # GET /contacts/1
   def show
+    authorize_contact
   end
 
   # GET /contacts/new
   def new
     @contact = Contact.new
+    skip_authorization
   end
 
   # GET /contacts/1/edit
@@ -22,6 +26,8 @@ class ContactsController < ApplicationController
   # POST /contacts
   def create
     @contact = Contact.new(contact_params)
+    @contact.user_id = current_user.id
+    skip_authorization
 
     if @contact.save
       redirect_to contact_url(@contact), notice: "Contact was successfully created."
@@ -49,9 +55,16 @@ class ContactsController < ApplicationController
 
   def set_contact
     @contact = Contact.find(params[:id])
+    authorize_contact
   end
 
   def contact_params
     params.require(:contact).permit(:full_name, :document_number, :email, :birthday)
+  end
+
+  def authorize_contact
+    # byebug
+    # policy(@contact).show?
+    authorize @contact
   end
 end
